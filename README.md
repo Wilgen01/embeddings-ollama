@@ -11,7 +11,7 @@ Este proyecto es una aplicación de chatbot interactiva construida con Streamlit
 
 ## Requisitos Previos
 - Python 3.8 o superior instalado
-- Ollama instalado en tu sistema
+- Ollama instalado en tu sistema (o Docker para alternativa)
 
 ## Pasos para Ejecutar el Proyecto
 
@@ -21,7 +21,7 @@ Descarga e instala Ollama desde el sitio oficial: [https://ollama.ai/](https://o
 ### 2. Iniciar Sesión en Ollama (Necesario)
 Debes iniciar sesión con tu cuenta de Ollama para acceder a modelos en la nube y evitar el uso de recursos locales. Esto es requerido para el modelo "gpt-oss:120b-cloud" utilizado en el proyecto:
 ```bash
-ollama login
+ollama signin
 ```
 
 ### 3. Descargar los Modelos Necesarios
@@ -32,8 +32,10 @@ ollama pull gpt-oss:120b-cloud
 ```
 
 ### 4. Instalar las Dependencias del Proyecto
-Clona o descarga este repositorio e instala las dependencias usando pip:
+Clona o descarga este repositorio. Crea un entorno virtual y activa, luego instala las dependencias:
 ```bash
+python -m venv venv
+venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
@@ -51,6 +53,46 @@ streamlit run embedding-ollama.py
 ```
 
 La aplicación se abrirá en tu navegador web predeterminado. Sube un PDF desde la barra lateral y comienza a hacer preguntas sobre su contenido.
+
+## Alternativa: Ejecutar con Docker (Sin Instalar Ollama Localmente)
+
+Si prefieres no instalar Ollama en tu sistema, puedes usar Docker para ejecutar Ollama y los modelos.
+
+### Requisitos Adicionales
+- Docker instalado y ejecutándose en tu sistema
+
+### Pasos Alternativos
+
+#### 1. Ejecutar Ollama en Docker
+Ejecuta el contenedor de Ollama en segundo plano:
+```bash
+docker run -d --name ollama -p 11434:11434 ollama/ollama
+```
+
+#### 2. Iniciar Sesión en Ollama (Necesario)
+Desde el contenedor, inicia sesión:
+```bash
+docker exec -it ollama ollama signin
+```
+
+#### 3. Descargar los Modelos Necesarios
+Descarga los modelos dentro del contenedor:
+```bash
+docker exec -it ollama ollama pull embeddinggemma
+docker exec -it ollama ollama pull gpt-oss:120b-cloud
+```
+
+#### 4. Instalar las Dependencias del Proyecto
+Clona o descarga este repositorio e instala las dependencias usando pip:
+```bash
+pip install -r requirements.txt
+```
+
+#### 5. Ejecutar el Proyecto
+Ejecuta la aplicación Streamlit (el servidor de Ollama ya está corriendo en Docker):
+```bash
+streamlit run embedding-ollama.py
+```
 
 ## Notas Adicionales
 - Asegúrate de que el puerto 11434 no esté ocupado por otra aplicación.
