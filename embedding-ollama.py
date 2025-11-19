@@ -25,8 +25,8 @@ uploaded_file = st.sidebar.file_uploader(
     type="pdf"
 )
 
-embeddings = OllamaEmbeddings(model="qwen3-embedding:4b")
-llm = OllamaLLM(model="gpt-oss:120b-cloud")
+embeddings = OllamaEmbeddings(model="embeddinggemma", base_url="http://localhost:11434")
+llm = OllamaLLM(model="gpt-oss:120b-cloud", base_url="http://localhost:11434")
 
 
 def load_file(uploaded_file):
@@ -39,8 +39,8 @@ def load_file(uploaded_file):
 
 def split_document(document):
     text_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=1000,
-                chunk_overlap=200,
+                chunk_size=500,
+                chunk_overlap=50,
                 separators=["\n\n", "\n", ".", "!", "?", " ", ""],
                 add_start_index=True
             )
@@ -62,14 +62,6 @@ def answer_question(retriever, user_prompt):
     final_prompt = ChatPromptTemplate.from_template(template=prompt_template)
     chain = final_prompt | llm
 
-    st.write("🧠 **Contexto enviado al modelo:**")
-    st.write(context)
-
-    st.write("💬 **Pregunta del usuario:**")
-    st.write(user_prompt)
-
-    st.write("🧩 **Prompt final construido:**")
-    st.write(final_prompt.format(context=context, input=user_prompt))
     return chain.invoke({"context": context, "input": user_prompt})
 
 if "messages" not in st.session_state:
@@ -82,12 +74,17 @@ for message in st.session_state.messages:
 
 if uploaded_file:
     if "file_processed" not in st.session_state or st.session_state.file_processed != uploaded_file.name:
-        st.session_state.retriever = create_embeddings_from_file(uploaded_file)
+        with st.chat_message("ai"):
+            message_placeholder = st.empty()
+            with st.spinner("Procesando archivo y creando embeddings..."):
+                st.session_state.retriever = create_embeddings_from_file(uploaded_file)
+            message_placeholder.write("Archivo cargado correctamente")
+
         st.session_state.messages.append({
             "role": "ai",
             "content": "PDF listo. ¿En qué puedo ayudarte con este documento?"
         })
-        st.chat_message("ai").write("PDF listo. ¿En qué puedo ayudarte con este documento?")
+        message_placeholder.write("PDF listo. ¿En qué puedo ayudarte con este documento?")
         st.session_state.file_processed = uploaded_file.name
         
     retriever = st.session_state.retriever
@@ -99,7 +96,7 @@ if uploaded_file:
 
         with st.chat_message("assistant"):
             message_placeholder = st.empty()
-            with st.spinner("analizando tu documento..."):
+            with st.spinner("Generando respuesta..."):
                 response = answer_question(retriever, question)
             message_placeholder.write(response)
             st.session_state.messages.append({"role": "assistant", "content": response})
